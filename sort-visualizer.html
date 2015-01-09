@@ -1,0 +1,287 @@
+<!DOCTYPE html><html>
+<script src="Chart.js-master/Chart.js"></script>
+<body>
+<canvas id="Numbers" width="1000" height="1000"></canvas>
+<div style="padding 10px 0px 0px 0px">
+	<p id="inspections">Reads: 0</p>
+</div>
+<div style="padding 10px 0px 0px 0px">
+	<p id="swaps">Swaps: 0</p>
+</div>
+<div style="padding: 20px 0px 0px 0px">
+	<button type="button" onclick="onShuffle()">Shuffle</button>
+</div>
+<div style="padding: 50px 0px 0px 0px">
+	<button type="button" onclick="onBubbleSort()">Bubble Sort</button>
+</div>
+<div style="padding: 50px 0px 0px 0px">
+	<button type="button" onclick="onInsertionSort()">Insertion Sort</button>
+</div>
+<div style="padding: 50px 0px 0px 0px">
+	<button type="button" onclick="onSelectionSort()">Selection Sort</button>
+</div>
+<div style="padding: 50px 0px 0px 0px">
+	<button type="button" onclick="onQuickSort()">Quicksort</button>
+</div>
+
+<script>
+var ctx = document.getElementById("Numbers").getContext("2d");
+
+var data = {
+	labels: [],
+	datasets: [
+		{
+            label: "My Second dataset",
+            fillColor: "rgba(151,187,205,0.5)",
+            strokeColor: "rgba(151,187,205,0.8)",
+            highlightFill: "rgba(151,187,205,0.75)",
+            highlightStroke: "rgba(151,187,205,1)",
+            data: []
+		}
+	]
+};
+
+for (var i = 0; i < 50; ++i){
+	data.labels.push(i+1);
+	data.datasets[0].data.push(i+1);
+}
+
+shuffle(data.datasets[0].data);
+var randChart = new Chart(ctx).Bar(data, {animationSteps:2});
+
+
+function shuffle(list){
+	for (var i = 0; i < list.length; ++i){
+		var randIdx = Math.floor(Math.random() * (list.length - i)) + i;
+		// console.log(i);
+		// console.log("index " + (i) + ": " + randIdx);
+		swap(list, i, randIdx);
+	}
+}
+
+function shuffleChart(list){
+	for (var i = 0; i < list.length; ++i){
+		var randIdx = Math.floor(Math.random() * (list.length - i)) + i;
+		// console.log(i);
+		// console.log("index " + (i) + ": " + randIdx);
+		swapElement(list, i, randIdx);
+	}
+}
+
+function colorRed(a, b){
+	randChart.datasets[0].bars[a].fillColor = "rgba(255,0,0,0.5)";
+	randChart.datasets[0].bars[b].fillColor = "rgba(255,0,0,0.5)";
+}
+
+function colorGreen(a, b){
+	randChart.datasets[0].bars[a].fillColor = "rgba(10,255,0,0.5)";
+	randChart.datasets[0].bars[b].fillColor = "rgba(10,255,0,0.5)";
+}
+
+function swap(list, a, b){
+	if (a == b) return;
+	list[a] = list[a] ^ list[b];
+	list[b] = list[a] ^ list[b];
+	list[a] = list[a] ^ list[b];
+}
+
+function swapElement(list, a, b){
+	if (a == b) return;
+	list[a].value = list[a].value ^ list[b].value;
+	list[b].value = list[a].value ^ list[b].value;
+	list[a].value = list[a].value ^ list[b].value;
+}
+
+function resetAllColors(){
+	for (var i = 0; i < randChart.datasets[0].bars.length; i++){
+		randChart.datasets[0].bars[i].fillColor = "rgba(151,187,205,0.5)";
+	}
+}
+
+function copyChartList(charList){
+	var retval = [];
+
+	for (var i = 0; i < randChart.datasets[0].bars.length; ++i){
+		retval.push(randChart.datasets[0].bars[i].value);
+	}
+
+	return retval;
+}
+
+function bubbleSort(list){
+	var copiedList = copyChartList(list);
+	var moveList = [];
+
+	var swapped = true;
+	var end = copiedList.length;
+	while (swapped === true){
+		swapped = false;
+		for (var i = 1; i < end; ++i){
+			if (copiedList[i-1] > copiedList[i]){
+				swap(copiedList, i-1, i);
+				moveList.push({type: "swap", a: i-1, b: i});
+				swapped = true;
+			} else {
+				moveList.push({type: "inspect", a: i-1, b: i});	
+			}
+		}
+		end--;
+	}
+
+	return moveList;
+}
+
+function insertionSort(list){
+	var copiedList = copyChartList(list);
+	var moveList = [];
+
+	for (var i = 0; i < copiedList.length; ++i){
+		var j = i;
+		while (true){
+			if (j > 0 && copiedList[j-1] > copiedList[j]){
+				swap(copiedList, j-1, j);
+				moveList.push({type: "swap", a: j-1, b: j});
+				j--;
+			} else {
+				moveList.push({type: "inspect", a: j-1, b: j});
+				break;
+			}
+		}
+	}
+
+	return moveList;
+}
+
+function selectionSort(list){
+	var copiedList = copyChartList(list);
+	var moveList = [];
+
+	for (var i = 0; i < copiedList.length; ++i){
+		var minIdx = i;
+		var min = copiedList[i];
+		for (var j = i; j < copiedList.length; ++j){
+			moveList.push({type: "inspect", a: minIdx, b: j});
+			if (copiedList[j] < min){
+				min = copiedList[j];
+				minIdx = j;
+			}
+		}
+		moveList.push({type: "swap", a: i, b: minIdx});
+		swap(copiedList, i, minIdx);
+	}
+
+	return moveList;
+}
+
+function quickSort(list){
+	var copiedList = copyChartList(list);
+	var moveList = [];
+	var sortStack = [{beg: 0, end: list.length-1}];
+
+	while (sortStack.length > 0){
+		var move = sortStack.shift();
+		if (move.beg >= move.end){
+			continue;
+		}
+		var pivot = Math.floor((move.beg + move.end) / 2);
+		var pivotVal = copiedList[pivot];
+		var swapPos = move.beg;
+		swap(copiedList, pivot, move.end);
+		moveList.push({type: "swap", a: pivot, b: move.end});
+		// Partition
+		for (var i = move.beg; i < move.end; ++i){
+			if (copiedList[i] <= pivotVal){
+				swap(copiedList, swapPos, i);
+				moveList.push({type: "swap", a: swapPos, b: i});
+				swapPos++;
+			} else {
+				moveList.push({type: "inspect", a: i, b: move.end});
+			}
+		}
+		swap(copiedList, swapPos, move.end);
+		moveList.push({type: "swap", a: swapPos, b: move.end});
+		sortStack.push({beg:move.beg, end: swapPos-1});
+		sortStack.push({beg:swapPos+1, end: move.end});
+	}
+
+	return moveList;
+}
+
+function playMoves(moveList){
+	var delay = 10;
+	var delta = 10;
+
+	for (var i = 0; i < moveList.length; ++i){
+		var move = moveList[i];
+		setTimeout(function(mv){
+			return function(){
+				resetAllColors();
+				if (mv.type === "swap"){
+					swapElement(randChart.datasets[0].bars, mv.a, mv.b);
+					colorRed(mv.a, mv.b)
+				} else if (mv.type === "inspect"){
+					colorGreen(mv.a, mv.b);
+				}
+				randChart.update();
+			}
+		}(move), delay);
+		delay += delta;
+	}
+
+}
+
+function setLabels(moveList){
+
+	var swapCount = 0, inspectionCount = 0;
+
+	for (var i = 0; i < moveList.length; ++i){
+		if (moveList[i].type === "inspect"){
+			inspectionCount++;
+		} else if (moveList[i].type === "swap"){
+			swapCount++;
+		}
+	}
+
+	document.getElementById("inspections").innerHTML = "Reads: " + inspectionCount;
+
+	document.getElementById("swaps").innerHTML = "Swaps: " + swapCount;
+}
+
+function onBubbleSort(){
+	sort(bubbleSort);
+}
+
+function onInsertionSort(){
+	sort(insertionSort);
+}
+
+function onSelectionSort(){
+	sort(selectionSort);
+}
+
+function onQuickSort(){
+	sort(quickSort);
+}
+
+function sort(sortFunc){
+	var moveList = sortFunc(randChart.datasets[0].bars);
+
+	playMoves(moveList);
+
+	randChart.update();
+
+	setLabels(moveList);
+}
+
+function onShuffle(){
+	shuffleChart(randChart.datasets[0].bars);
+
+	randChart.update();
+}
+
+</script>
+
+
+
+
+</body></html>
